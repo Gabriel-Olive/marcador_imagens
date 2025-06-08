@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Números na Imagem</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #image-input {
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #image-input::file-selector-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #image-input::file-selector-button:hover {
+            background-color: #0056b3;
+        }
+        #image-container {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #my-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .number-circle {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background-color: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        .number-circle:hover {
+            transform: scale(1.1);
+        }
+        #button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .action-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+        #clear-button {
+            background-color: #6c757d;
+            color: white;
+        }
+        #clear-button:hover {
+            background-color: #5a6268;
+        }
+        #save-button {
+            background-color: #28a745;
+            color: white;
+        }
+        #save-button:hover {
+            background-color: #218838;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            .action-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Adicionar Números à Imagem</h1>
+        <input type="file" id="image-input" accept="image/*">
+        <div id="image-container">
+            <img id="my-image" src="" alt="Imagem carregada">
+        </div>
+        <div id="button-container">
+            <button id="clear-button" class="action-button">Limpar Números</button>
+            <button id="save-button" class="action-button">Salvar Imagem</button>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('image-input');
+        const image = document.getElementById('my-image');
+        const imageContainer = document.getElementById('image-container');
+        const clearButton = document.getElementById('clear-button');
+        const saveButton = document.getElementById('save-button');
+        let numberCounter = 1;
+        let numbers = [];
+
+        // Carregar imagem quando selecionada
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    image.src = e.target.result;
+                    image.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Adicionar número ao clicar na imagem
+        image.addEventListener('click', (event) => {
+            const rect = image.getBoundingClientRect();
+            const scaleX = image.naturalWidth / rect.width;
+            const scaleY = image.naturalHeight / rect.height;
+            const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
+
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'number-circle';
+            numberDiv.textContent = numberCounter;
+            numberDiv.style.left = `${event.clientX - rect.left - 14}px`;
+            numberDiv.style.top = `${event.clientY - rect.top - 14}px`;
+            imageContainer.appendChild(numberDiv);
+
+            numbers.push({ number: numberCounter, x, y });
+            numberCounter++;
+        });
+
+        // Limpar números
+        clearButton.addEventListener('click', () => {
+            const circles = document.querySelectorAll('.number-circle');
+            circles.forEach(circle => circle.remove());
+            numbers = [];
+            numberCounter = 1;
+        });
+
+        // Salvar imagem com números
+        saveButton.addEventListener('click', () => {
+            if (!image.src) {
+                alert('Por favor, carregue uma imagem primeiro!');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = image.src;
+
+            img.onload = () => {
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+
+                // Desenhar a imagem no canvas
+                ctx.drawImage(img, 0, 0);
+
+                // Desenhar os números
+                numbers.forEach(({ number, x, y }) => {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 14, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#ff4d4f';
+                    ctx.fill();
+
+                    ctx.font = 'bold 16px Segoe UI, Arial';
+                    ctx.fillStyle = 'white';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(number, x, y);
+                });
+
+                // Criar link de download
+                const link = document.createElement('a');
+                link.download = 'imagem-com-numeros.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+        });
+    </script>
+</body>
+</html>
