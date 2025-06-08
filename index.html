@@ -248,6 +248,8 @@
             ctx.lineWidth = parseInt(arrowWidthInput.value);
             ctx.fillStyle = circleColorInput.value;
 
+            const circleRadius = parseInt(circleSizeInput.value) / 2;
+
             for (let i = 0; i < numbers.length - 1; i++) {
                 const start = numbers[i];
                 const end = numbers[i + 1];
@@ -256,24 +258,28 @@
                 const endX = end.displayX;
                 const endY = end.displayY;
 
-                // Desenhar linha
+                // Calcular o ponto na borda do círculo de destino
+                const angle = Math.atan2(endY - startY, endX - startX);
+                const borderX = endX - circleRadius * Math.cos(angle);
+                const borderY = endY - circleRadius * Math.sin(angle);
+
+                // Desenhar linha até a borda
                 ctx.beginPath();
                 ctx.moveTo(startX, startY);
-                ctx.lineTo(endX, endY);
+                ctx.lineTo(borderX, borderY);
                 ctx.stroke();
 
                 // Desenhar ponta da seta
-                const angle = Math.atan2(endY - startY, endX - startX);
                 const arrowSize = 10;
                 ctx.beginPath();
-                ctx.moveTo(endX, endY);
+                ctx.moveTo(borderX, borderY);
                 ctx.lineTo(
-                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
-                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                    borderX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    borderY - arrowSize * Math.sin(angle - Math.PI / 6)
                 );
                 ctx.lineTo(
-                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
-                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                    borderX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    borderY - arrowSize * Math.sin(angle + Math.PI / 6)
                 );
                 ctx.closePath();
                 ctx.fill();
@@ -378,28 +384,34 @@
                     saveCtx.lineWidth = parseInt(arrowWidthInput.value);
                     saveCtx.fillStyle = circleColorInput.value;
 
+                    const circleRadius = parseInt(circleSizeInput.value) / 2 * (img.naturalWidth / image.clientWidth);
+
                     for (let i = 0; i < numbers.length - 1; i++) {
                         const start = numbers[i];
                         const end = numbers[i + 1];
 
+                        // Calcular o ponto na borda do círculo de destino
+                        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+                        const borderX = end.x - circleRadius * Math.cos(angle);
+                        const borderY = end.y - circleRadius * Math.sin(angle);
+
                         // Desenhar linha
                         saveCtx.beginPath();
                         saveCtx.moveTo(start.x, start.y);
-                        saveCtx.lineTo(end.x, end.y);
+                        saveCtx.lineTo(borderX, borderY);
                         saveCtx.stroke();
 
                         // Desenhar ponta da seta
-                        const angle = Math.atan2(end.y - start.y, end.x - start.x);
                         const arrowSize = 10;
                         saveCtx.beginPath();
-                        saveCtx.moveTo(end.x, end.y);
+                        saveCtx.moveTo(borderX, borderY);
                         saveCtx.lineTo(
-                            end.x - arrowSize * Math.cos(angle - Math.PI / 6),
-                            end.y - arrowSize * Math.sin(angle - Math.PI / 6)
+                            borderX - arrowSize * Math.cos(angle - Math.PI / 6),
+                            borderY - arrowSize * Math.sin(angle - Math.PI / 6)
                         );
                         saveCtx.lineTo(
-                            end.x - arrowSize * Math.cos(angle + Math.PI / 6),
-                            end.y - arrowSize * Math.sin(angle + Math.PI / 6)
+                            borderX - arrowSize * Math.cos(angle + Math.PI / 6),
+                            borderY - arrowSize * Math.sin(angle + Math.PI / 6)
                         );
                         saveCtx.closePath();
                         saveCtx.fill();
