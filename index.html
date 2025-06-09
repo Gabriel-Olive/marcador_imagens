@@ -471,7 +471,7 @@
                         const balloonWidth = parseInt(balloonWidthInput.value) * scaleX;
                         const textSize = parseInt(textSizeInput.value) * scaleY;
                         const paddingX = 10 * scaleX;
-                        const paddingY = 8 * scaleY;
+                        const paddingY = 5 * scaleY;
                         const font = `${textSize}px Segoe UI, Arial`;
                         saveCtx.font = font;
 
@@ -497,17 +497,17 @@
 
                         // Sombra
                         saveCtx.save();
-                        saveCtx.shadowColor = "rgba(0,0,0,0.18)";
-                        saveCtx.shadowBlur = 8 * scaleX;
+                        saveCtx.shadowColor = "rgba(0,0,0,0.2)";
+                        saveCtx.shadowBlur = 5 * scaleX;
                         saveCtx.shadowOffsetY = 2 * scaleY;
 
                         // Balão arredondado
-                        const radius = 10 * scaleX;
+                        const radius = 8 * scaleX; // igual ao border-radius
+                        saveCtx.lineWidth = 2 * scaleX; // igual ao border
                         roundedRect(saveCtx, scaledDisplayX, scaledDisplayY, balloonWidth, balloonHeight, radius);
                         saveCtx.fillStyle = shapeColorInput.value;
                         saveCtx.fill();
                         saveCtx.shadowColor = "transparent";
-                        saveCtx.lineWidth = 2 * scaleX;
                         saveCtx.strokeStyle = textColorInput.value;
                         saveCtx.stroke();
                         saveCtx.restore();
