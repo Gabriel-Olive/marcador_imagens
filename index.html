@@ -448,8 +448,7 @@
             }
 
             const canvas = document.createElement('canvas');
-            const saveCtx = canvas.getContext('2d');
-
+            const ctx = canvas.getContext('2d');
             const img = new Image();
             img.crossOrigin = 'Anonymous';
             img.src = image.src;
@@ -457,8 +456,7 @@
             img.onload = () => {
                 canvas.width = img.naturalWidth;
                 canvas.height = img.naturalHeight;
-
-                saveCtx.drawImage(img, 0, 0);
+                ctx.drawImage(img, 0, 0);
 
                 numbers.forEach(({ x, y, displayX, displayY, description, number }) => {
                     const scaleX = img.naturalWidth / image.clientWidth;
@@ -467,79 +465,29 @@
                     const scaledDisplayY = displayY * scaleY;
 
                     if (isBalloonMode) {
-                        // Balão arredondado com sombra e altura dinâmica
+                        // Balão simples
                         const balloonWidth = parseInt(balloonWidthInput.value) * scaleX;
                         const textSize = parseInt(textSizeInput.value) * scaleY;
-                        const paddingX = 10 * scaleX;
-                        const paddingY = 5 * scaleY;
-                        const font = `${textSize}px Segoe UI, Arial`;
-                        saveCtx.font = font;
-
-                        // Quebra o texto em linhas se necessário
-                        const text = description || `${number}- `;
-                        const words = text.split(' ');
-                        let lines = [];
-                        let currentLine = '';
-                        for (let i = 0; i < words.length; i++) {
-                            const testLine = currentLine + words[i] + ' ';
-                            const { width: testWidth } = saveCtx.measureText(testLine);
-                            if (testWidth > balloonWidth - 2 * paddingX && i > 0) {
-                                lines.push(currentLine.trim());
-                                currentLine = words[i] + ' ';
-                            } else {
-                                currentLine = testLine;
-                            }
-                        }
-                        lines.push(currentLine.trim());
-
-                        const lineHeight = textSize * 1.3;
-                        const balloonHeight = lines.length * lineHeight + 2 * paddingY;
-
-                        // Sombra
-                        saveCtx.save();
-                        saveCtx.shadowColor = "rgba(0,0,0,0.2)";
-                        saveCtx.shadowBlur = 5 * scaleX;
-                        saveCtx.shadowOffsetY = 2 * scaleY;
-
-                        // Balão arredondado
-                        const radius = 8 * scaleX; // igual ao border-radius
-                        saveCtx.lineWidth = 2 * scaleX; // igual ao border
-                        roundedRect(saveCtx, scaledDisplayX, scaledDisplayY, balloonWidth, balloonHeight, radius);
-                        saveCtx.fillStyle = shapeColorInput.value;
-                        saveCtx.fill();
-                        saveCtx.shadowColor = "transparent";
-                        saveCtx.strokeStyle = textColorInput.value;
-                        saveCtx.stroke();
-                        saveCtx.restore();
-
-                        // Texto
-                        saveCtx.fillStyle = textColorInput.value;
-                        saveCtx.font = font;
-                        saveCtx.textBaseline = "top";
-                        saveCtx.textAlign = "left";
-                        lines.forEach((line, idx) => {
-                            saveCtx.fillText(line, scaledDisplayX + paddingX, scaledDisplayY + paddingY + idx * lineHeight, balloonWidth - 2 * paddingX);
-                        });
+                        ctx.fillStyle = shapeColorInput.value;
+                        ctx.fillRect(scaledDisplayX, scaledDisplayY, balloonWidth, textSize + 10);
+                        ctx.strokeStyle = textColorInput.value;
+                        ctx.strokeRect(scaledDisplayX, scaledDisplayY, balloonWidth, textSize + 10);
+                        ctx.fillStyle = textColorInput.value;
+                        ctx.font = `${textSize}px Arial`;
+                        ctx.textBaseline = "top";
+                        ctx.fillText(description || `${number}-`, scaledDisplayX + 5, scaledDisplayY + 5, balloonWidth - 10);
                     } else {
-                        // Círculo com sombra
+                        // Círculo simples
                         const circleRadius = parseInt(circleSizeInput.value) / 2 * scaleX;
-                        saveCtx.save();
-                        saveCtx.shadowColor = "rgba(0,0,0,0.18)";
-                        saveCtx.shadowBlur = 8 * scaleX;
-                        saveCtx.shadowOffsetY = 2 * scaleY;
-                        saveCtx.beginPath();
-                        saveCtx.arc(scaledDisplayX, scaledDisplayY, circleRadius, 0, 2 * Math.PI);
-                        saveCtx.fillStyle = shapeColorInput.value;
-                        saveCtx.fill();
-                        saveCtx.shadowColor = "transparent";
-                        saveCtx.restore();
-
-                        // Texto centralizado
-                        saveCtx.fillStyle = textColorInput.value;
-                        saveCtx.font = `bold ${parseInt(textSizeInput.value) * scaleY}px Segoe UI, Arial`;
-                        saveCtx.textAlign = 'center';
-                        saveCtx.textBaseline = 'middle';
-                        saveCtx.fillText(number, scaledDisplayX, scaledDisplayY);
+                        ctx.beginPath();
+                        ctx.arc(scaledDisplayX, scaledDisplayY, circleRadius, 0, 2 * Math.PI);
+                        ctx.fillStyle = shapeColorInput.value;
+                        ctx.fill();
+                        ctx.fillStyle = textColorInput.value;
+                        ctx.font = `bold ${parseInt(textSizeInput.value) * scaleY}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(number, scaledDisplayX, scaledDisplayY);
                     }
                 });
 
@@ -548,21 +496,6 @@
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             };
-
-            // Função auxiliar para desenhar retângulo arredondado
-            function roundedRect(ctx, x, y, w, h, r) {
-                ctx.beginPath();
-                ctx.moveTo(x + r, y);
-                ctx.lineTo(x + w - r, y);
-                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-                ctx.lineTo(x + w, y + h - r);
-                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-                ctx.lineTo(x + r, y + h);
-                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-                ctx.lineTo(x, y + r);
-                ctx.quadraticCurveTo(x, y, x + r, y);
-                ctx.closePath();
-            }
         });
 
         // Alternar entre modos
