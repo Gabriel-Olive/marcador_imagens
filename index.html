@@ -515,6 +515,54 @@
         circleSizeInput.addEventListener('input', updateShapes);
         balloonWidthInput.addEventListener('input', updateShapes);
         textSizeInput.addEventListener('input', updateShapes);
+
+        // Permitir colar imagem da área de transferência
+        document.addEventListener('paste', (event) => {
+            const items = (event.clipboardData || window.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        image.src = e.target.result;
+                        image.style.display = 'block';
+                        image.onload = () => {
+                            imageContainer.style.width = `${image.width}px`;
+                            imageContainer.style.height = `${image.height}px`;
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                    event.preventDefault();
+                    break;
+                }
+            }
+        });
+
+        // Permitir arrastar e soltar imagem
+        imageContainer.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            imageContainer.style.borderColor = '#007bff';
+        });
+        imageContainer.addEventListener('dragleave', () => {
+            imageContainer.style.borderColor = '#e0e0e0';
+        });
+        imageContainer.addEventListener('drop', (event) => {
+            event.preventDefault();
+            imageContainer.style.borderColor = '#e0e0e0';
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    image.src = e.target.result;
+                    image.style.display = 'block';
+                    image.onload = () => {
+                        imageContainer.style.width = `${image.width}px`;
+                        imageContainer.style.height = `${image.height}px`;
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     </script>
 </body>
 </html>
