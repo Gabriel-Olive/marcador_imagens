@@ -247,6 +247,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
         const imageInput = document.getElementById('image-input');
         const image = document.getElementById('my-image');
@@ -454,197 +455,78 @@
 
         // Salvar imagem com formas
         saveButton.addEventListener('click', () => {
-            if (!image.src) {
-                alert('Por favor, carregue uma imagem primeiro!');
-                return;
-            }
-
-            const canvas = document.createElement('canvas');
-            const saveCtx = canvas.getContext('2d');
-
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = image.src;
-
-            img.onload = () => {
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
-
-                saveCtx.drawImage(img, 0, 0);
-
-                numbers.forEach(({ x, y, displayX, displayY, description, number }) => {
-                    const scaleX = img.naturalWidth / image.clientWidth;
-                    const scaleY = img.naturalHeight / image.clientHeight;
-                    const scaledDisplayX = displayX * scaleX;
-                    const scaledDisplayY = displayY * scaleY;
-
-                    if (isBalloonMode) {
-                        saveCtx.fillStyle = shapeColorInput.value;
-                        saveCtx.strokeStyle = textColorInput.value;
-                        saveCtx.lineWidth = 2;
-                        saveCtx.strokeRect(scaledDisplayX, scaledDisplayY, parseInt(balloonWidthInput.value) * scaleX, 30 * scaleY);
-                        saveCtx.fillStyle = textColorInput.value;
-                        saveCtx.font = `${parseInt(textSizeInput.value)}px Segoe UI, Arial`;
-                        saveCtx.fillText(description || `${number}-`, scaledDisplayX + 5 * scaleX, scaledDisplayY + 20 * scaleY, parseInt(balloonWidthInput.value) * scaleX);
-                    } else {
-                        saveCtx.beginPath();
-                        saveCtx.arc(scaledDisplayX, scaledDisplayY, parseInt(circleSizeInput.value) / 2 * scaleX, 0, 2 * Math.PI);
-                        saveCtx.fillStyle = shapeColorInput.value;
-                        saveCtx.fill();
-                        saveCtx.fillStyle = textColorInput.value;
-                        saveCtx.font = `bold ${parseInt(textSizeInput.value)}px Segoe UI, Arial`;
-                        saveCtx.textAlign = 'center';
-                        saveCtx.textBaseline = 'middle';
-                        saveCtx.fillText(number, scaledDisplayX, scaledDisplayY);
-                    }
-                });
-
+            html2canvas(imageContainer, {
+                backgroundColor: null // Mantém transparência se houver
+            }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `imagem-com-${isBalloonMode ? 'baloes' : 'circulos'}.png`;
+                link.download = 'imagem-com-elementos.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-            };
+            });
         });
 
-        // Copiar imagem com formas para área de transferência
+        // Copiar imagem para área de transferência
         copyButton.addEventListener('click', () => {
-            if (!image.src) {
-                alert('Por favor, carregue uma imagem primeiro!');
-                return;
-            }
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = image.src;
-
-            img.onload = () => {
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
-
-                ctx.drawImage(img, 0, 0);
-
-                numbers.forEach(({ x, y, displayX, displayY, description, number }) => {
-                    const scaleX = img.naturalWidth / image.clientWidth;
-                    const scaleY = img.naturalHeight / image.clientHeight;
-                    const scaledDisplayX = displayX * scaleX;
-                    const scaledDisplayY = displayY * scaleY;
-
-                    if (isBalloonMode) {
-                        ctx.fillStyle = shapeColorInput.value;
-                        ctx.strokeStyle = textColorInput.value;
-                        ctx.lineWidth = 2;
-                        ctx.strokeRect(scaledDisplayX, scaledDisplayY, parseInt(balloonWidthInput.value) * scaleX, 30 * scaleY);
-                        ctx.fillStyle = textColorInput.value;
-                        ctx.font = `${parseInt(textSizeInput.value)}px Segoe UI, Arial`;
-                        ctx.fillText(description || `${number}-`, scaledDisplayX + 5 * scaleX, scaledDisplayY + 20 * scaleY, parseInt(balloonWidthInput.value) * scaleX);
+            html2canvas(imageContainer, {
+                backgroundColor: null
+            }).then(canvas => {
+                canvas.toBlob(blob => {
+                    if (navigator.clipboard && window.ClipboardItem) {
+                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                            .then(() => alert('Imagem copiada para a área de transferência!'))
+                            .catch(() => alert('Não foi possível copiar a imagem.'));
                     } else {
-                        ctx.beginPath();
-                        ctx.arc(scaledDisplayX, scaledDisplayY, parseInt(circleSizeInput.value) / 2 * scaleX, 0, 2 * Math.PI);
-                        ctx.fillStyle = shapeColorInput.value;
-                        ctx.fill();
-                        ctx.fillStyle = textColorInput.value;
-                        ctx.font = `bold ${parseInt(textSizeInput.value)}px Segoe UI, Arial`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(number, scaledDisplayX, scaledDisplayY);
+                        alert('Seu navegador não suporta copiar imagens para a área de transferência.');
                     }
                 });
-
-                canvas.toBlob((blob) => {
-                    const item = new ClipboardItem({ 'image/png': blob });
-                    navigator.clipboard.write([item]).then(() => {
-                        alert('Imagem copiada para a área de transferência!');
-                    }, (err) => {
-                        console.error('Erro ao copiar imagem: ', err);
-                    });
-                });
-            };
+            });
         });
 
-        // Alternar entre modos
+        // Alternar entre modos de balão e círculo
         modeToggle.addEventListener('click', () => {
             isBalloonMode = !isBalloonMode;
             modeToggle.textContent = isBalloonMode ? 'Alternar para Círculos' : 'Alternar para Balões';
-            clearButton.click();
-        });
+            const shapes = isBalloonMode ? document.querySelectorAll('.balloon') : document.querySelectorAll('.number-circle');
+            shapes.forEach(shape => shape.remove());
+            numbers.forEach(numberData => {
+                const newShape = document.createElement('div');
+                newShape.className = isBalloonMode ? 'balloon' : 'number-circle';
+                if (isBalloonMode) {
+                    newShape.style.backgroundColor = shapeColorInput.value;
+                    newShape.style.borderColor = textColorInput.value;
+                    newShape.style.width = `${parseInt(balloonWidthInput.value)}px`;
+                    newShape.style.left = `${numberData.displayX}px`;
+                    newShape.style.top = `${numberData.displayY}px`;
+                    newShape.dataset.number = numberData.number; // Armazena o número no dataset
 
-        // Atualizar ao mudar configurações
-        shapeColorInput.addEventListener('input', updateShapes);
-        textColorInput.addEventListener('input', updateShapes);
-        circleSizeInput.addEventListener('input', updateShapes);
-        balloonWidthInput.addEventListener('input', updateShapes);
-        textSizeInput.addEventListener('input', updateShapes);
+                    const textarea = document.createElement('textarea');
+                    textarea.placeholder = 'Descrição';
+                    textarea.value = `${numberData.description}`; // Mantém descrição existente
+                    textarea.style.color = textColorInput.value;
+                    textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
+                    textarea.style.backgroundColor = shapeColorInput.value;
+                    textarea.addEventListener('input', (e) => {
+                        const number = parseInt(newShape.dataset.number);
+                        const numberData = numbers.find(n => n.number === number);
+                        if (numberData) numberData.description = e.target.value;
+                        updateShapes(); // Recalcula altura ao digitar
+                    });
 
-        // Permitir colar imagem da área de transferência
-        document.addEventListener('paste', (event) => {
-            const items = (event.clipboardData || window.clipboardData).items;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf('image') !== -1) {
-                    const file = items[i].getAsFile();
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        image.src = e.target.result;
-                        image.style.display = 'block';
-                        image.onload = () => {
-                            imageContainer.style.width = `${image.width}px`;
-                            imageContainer.style.height = `${image.height}px`;
-                        };
-                    };
-                    reader.readAsDataURL(file);
-                    event.preventDefault();
-                    break;
+                    newShape.appendChild(textarea);
+                } else {
+                    newShape.style.width = `${parseInt(circleSizeInput.value)}px`;
+                    newShape.style.height = `${parseInt(circleSizeInput.value)}px`;
+                    newShape.style.backgroundColor = shapeColorInput.value;
+                    newShape.style.color = textColorInput.value;
+                    newShape.style.fontSize = `${parseInt(textSizeInput.value)}px`;
+                    newShape.style.left = `${numberData.displayX - parseInt(circleSizeInput.value) / 2}px`;
+                    newShape.style.top = `${numberData.displayY - parseInt(circleSizeInput.value) / 2}px`;
+                    newShape.style.borderRadius = '50%';
+                    newShape.textContent = numberData.number;
                 }
-            }
-        });
-
-        // Permitir arrastar e soltar imagem
-        imageContainer.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            imageContainer.style.borderColor = '#007bff';
-        });
-        imageContainer.addEventListener('dragleave', () => {
-            imageContainer.style.borderColor = '#e0e0e0';
-        });
-        imageContainer.addEventListener('drop', (event) => {
-            event.preventDefault();
-            imageContainer.style.borderColor = '#e0e0e0';
-            const file = event.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    image.src = e.target.result;
-                    image.style.display = 'block';
-                    image.onload = () => {
-                        imageContainer.style.width = `${image.width}px`;
-                        imageContainer.style.height = `${image.height}px`;
-                    };
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Captura de imagem pela câmera
-        document.getElementById('camera-button').addEventListener('click', () => {
-            document.getElementById('camera-input').click();
-        });
-
-        document.getElementById('camera-input').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    image.src = e.target.result;
-                    image.style.display = 'block';
-                    image.onload = () => {
-                        imageContainer.style.width = `${image.width}px`;
-                        imageContainer.style.height = `${image.height}px`;
-                    };
-                };
-                reader.readAsDataURL(file);
-            }
+                imageContainer.appendChild(newShape);
+            });
+            updateShapes();
         });
     </script>
 </body>
