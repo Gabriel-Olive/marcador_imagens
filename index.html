@@ -265,6 +265,8 @@
         const balloonWidthInput = document.getElementById('balloon-width');
         const textSizeInput = document.getElementById('text-size');
         const modeToggle = document.getElementById('mode-toggle');
+        const cameraButton = document.getElementById('camera-button');
+        const cameraInput = document.getElementById('camera-input');
         let numberCounter = 1;
         let numbers = [];
         let isBalloonMode = true;
@@ -276,6 +278,26 @@
 
         // Atualizar tamanho do container quando a imagem carrega
         imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    image.src = e.target.result;
+                    image.style.display = 'block';
+                    image.onload = () => {
+                        imageContainer.style.width = `${image.width}px`;
+                        imageContainer.style.height = `${image.height}px`;
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        cameraButton.addEventListener('click', () => {
+            cameraInput.click();
+        });
+
+        cameraInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
