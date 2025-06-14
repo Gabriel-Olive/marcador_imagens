@@ -205,6 +205,10 @@
                 width: 80px;
             }
         }
+        .selected-shape {
+            outline: 3px solid #007bff;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -268,6 +272,7 @@
         let isDraggingShape = false;
         let dragStartX = 0;
         let dragStartY = 0;
+        let selectedShape = null; // Novo: guarda o elemento selecionado
 
         // Atualizar tamanho do container quando a imagem carrega
         imageInput.addEventListener('change', (event) => {
@@ -337,29 +342,34 @@
             const displayX = event.clientX - rect.left;
             const displayY = event.clientY - rect.top;
 
-            let activeShape = null;
+            let clickedOnShape = false;
+
             if (isBalloonMode) {
                 const balloons = document.querySelectorAll('.balloon');
                 balloons.forEach(balloon => {
                     if (isClickInsideShape(event, balloon)) {
-                        const number = parseInt(balloon.dataset.number);
-                        activeShape = { balloon, numberData: numbers.find(n => n.number === number) };
+                        selectedShape = balloon;
+                        clickedOnShape = true;
                         balloon.querySelector('textarea').focus();
+                    } else {
+                        balloon.classList.remove('selected-shape');
                     }
                 });
             } else {
                 const circles = document.querySelectorAll('.number-circle');
                 circles.forEach(circle => {
                     if (isClickInsideShape(event, circle)) {
-                        const number = parseInt(circle.textContent);
-                        activeShape = { circle, numberData: numbers.find(n => n.number === number) };
+                        selectedShape = circle;
+                        clickedOnShape = true;
+                    } else {
+                        circle.classList.remove('selected-shape');
                     }
                 });
             }
 
-            if (!activeShape && ((isBalloonMode && document.querySelectorAll('.balloon').length < numberCounter) || 
-                               (!isBalloonMode && document.querySelectorAll('.number-circle').length < numberCounter))) {
-                const shape = isBalloonMode ? document.createElement('div') : document.createElement('div');
+            // Só cria novo se não clicou em shape existente
+            if (!clickedOnShape) {
+                const shape = document.createElement('div');
                 shape.className = isBalloonMode ? 'balloon' : 'number-circle';
                 if (isBalloonMode) {
                     shape.style.backgroundColor = shapeColorInput.value;
@@ -367,11 +377,11 @@
                     shape.style.width = `${parseInt(balloonWidthInput.value)}px`;
                     shape.style.left = `${displayX}px`;
                     shape.style.top = `${displayY}px`;
-                    shape.dataset.number = numberCounter; // Armazena o número no dataset
+                    shape.dataset.number = numberCounter;
 
                     const textarea = document.createElement('textarea');
                     textarea.placeholder = 'Descrição';
-                    textarea.value = `${numberCounter}- `; // Número incorporado no texto
+                    textarea.value = `${numberCounter}- `;
                     textarea.style.color = textColorInput.value;
                     textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
                     textarea.style.backgroundColor = shapeColorInput.value;
@@ -379,7 +389,7 @@
                         const number = parseInt(shape.dataset.number);
                         const numberData = numbers.find(n => n.number === number);
                         if (numberData) numberData.description = e.target.value;
-                        updateShapes(); // Recalcula altura ao digitar
+                        updateShapes();
                     });
 
                     shape.appendChild(textarea);
@@ -399,10 +409,10 @@
                     number: numberCounter,
                     x, y, displayX, displayY,
                     description: `${numberCounter}- `,
-                    color: shapeColorInput.value // Salva a cor individual do balão
+                    color: shapeColorInput.value
                 });
                 numberCounter++;
-                if (isBalloonMode) updateShapes(); // Ajusta altura após criação
+                if (isBalloonMode) updateShapes();
             }
         });
 
@@ -509,17 +519,6 @@
                     newShape.style.top = `${numberData.displayY}px`;
                     newShape.dataset.number = numberData.number;
 
-                    // Input de cor individual
-                    const colorInput = document.createElement('input');
-                    colorInput.type = 'color';
-                    colorInput.value = numberData.color || shapeColorInput.value;
-                    colorInput.style.marginBottom = '4px';
-                    colorInput.addEventListener('input', (e) => {
-                        numberData.color = e.target.value;
-                        newShape.style.backgroundColor = e.target.value;
-                        textarea.style.backgroundColor = e.target.value;
-                    });
-
                     const textarea = document.createElement('textarea');
                     textarea.placeholder = 'Descrição';
                     textarea.value = (numberData.description && numberData.description.trim() !== '' ? numberData.description : `${numberData.number}- `);
@@ -533,7 +532,6 @@
                         updateShapes();
                     });
 
-                    newShape.appendChild(colorInput);
                     newShape.appendChild(textarea);
                 } else {
                     newShape.style.width = `${parseInt(circleSizeInput.value)}px`;
@@ -549,6 +547,17 @@
                 imageContainer.appendChild(newShape);
             });
             updateShapes();
+        });
+
+        shapeColorInput.addEventListener('input', (e) => {
+            if (selectedShape) {
+                const number = isBalloonMode
+                    ? parseInt(selectedShape.dataset.number)
+                    : parseInt(selectedShape.textContent);
+                const numberData = numbers.find(n => n.number === number);
+                if (numberData) numberData.color = e.target.value;
+                updateShapes();
+            }
         });
     </script>
 </body>
