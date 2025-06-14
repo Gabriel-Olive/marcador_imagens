@@ -234,6 +234,8 @@
         </div>
         <button id="mode-toggle">Alternar para Círculos</button>
         <input type="file" id="image-input" accept="image/*">
+        <button id="camera-button" class="action-button" type="button">Tirar Foto</button>
+        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
         <div id="image-container">
             <img id="my-image" src="" alt="Imagem carregada">
             <canvas id="arrow-canvas"></canvas>
@@ -611,6 +613,27 @@
             imageContainer.style.borderColor = '#e0e0e0';
             const file = event.dataTransfer.files[0];
             if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    image.src = e.target.result;
+                    image.style.display = 'block';
+                    image.onload = () => {
+                        imageContainer.style.width = `${image.width}px`;
+                        imageContainer.style.height = `${image.height}px`;
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Captura de imagem pela câmera
+        document.getElementById('camera-button').addEventListener('click', () => {
+            document.getElementById('camera-input').click();
+        });
+
+        document.getElementById('camera-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     image.src = e.target.result;
