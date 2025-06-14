@@ -292,21 +292,21 @@
             const balloons = document.querySelectorAll('.balloon');
             if (isBalloonMode) {
                 balloons.forEach(balloon => {
-                    const number = parseInt(balloon.dataset.number); // Usa data-number para rastrear
+                    const number = parseInt(balloon.dataset.number);
                     const numberData = numbers.find(n => n.number === number);
                     if (numberData) {
-                        balloon.style.backgroundColor = shapeColorInput.value;
+                        balloon.style.backgroundColor = numberData.color || shapeColorInput.value;
                         balloon.style.borderColor = textColorInput.value;
                         balloon.style.width = `${parseInt(balloonWidthInput.value)}px`;
                         const textarea = balloon.querySelector('textarea');
                         textarea.style.color = textColorInput.value;
                         textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                        textarea.style.backgroundColor = shapeColorInput.value;
+                        textarea.style.backgroundColor = numberData.color || shapeColorInput.value;
                         balloon.style.left = `${numberData.displayX}px`;
                         balloon.style.top = `${numberData.displayY}px`;
-                        textarea.style.height = 'auto'; // Resetar altura
-                        textarea.style.height = `${textarea.scrollHeight}px`; // Ajustar altura ao conteúdo
-                        balloon.style.height = `${textarea.scrollHeight + 10}px`; // Ajustar balão com padding
+                        textarea.style.height = 'auto';
+                        textarea.style.height = `${textarea.scrollHeight}px`;
+                        balloon.style.height = `${textarea.scrollHeight + 10}px`;
                     }
                 });
             } else {
@@ -395,7 +395,12 @@
                     shape.textContent = numberCounter;
                 }
                 imageContainer.appendChild(shape);
-                numbers.push({ number: numberCounter, x, y, displayX, displayY, description: isBalloonMode ? `${numberCounter}- ` : undefined });
+                numbers.push({
+                    number: numberCounter,
+                    x, y, displayX, displayY,
+                    description: `${numberCounter}- `,
+                    color: shapeColorInput.value // Salva a cor individual do balão
+                });
                 numberCounter++;
                 if (isBalloonMode) updateShapes(); // Ajusta altura após criação
             }
@@ -444,11 +449,16 @@
         });
 
         // Limpar formas
-        clearButton.addEventListener('click', () => {
+        function clearShapes() {
             const circles = document.querySelectorAll('.number-circle');
             const balloons = document.querySelectorAll('.balloon');
             circles.forEach(circle => circle.remove());
             balloons.forEach(balloon => balloon.remove());
+        }
+
+        // Limpar formas
+        clearButton.addEventListener('click', () => {
+            clearShapes();
             numbers = [];
             numberCounter = 1;
         });
@@ -486,32 +496,44 @@
         modeToggle.addEventListener('click', () => {
             isBalloonMode = !isBalloonMode;
             modeToggle.textContent = isBalloonMode ? 'Alternar para Círculos' : 'Alternar para Balões';
-            const shapes = isBalloonMode ? document.querySelectorAll('.balloon') : document.querySelectorAll('.number-circle');
-            shapes.forEach(shape => shape.remove());
+            clearShapes(); // Limpa todos os elementos antes de alternar
             numbers.forEach(numberData => {
                 const newShape = document.createElement('div');
                 newShape.className = isBalloonMode ? 'balloon' : 'number-circle';
                 if (isBalloonMode) {
-                    newShape.style.backgroundColor = shapeColorInput.value;
+                    // Usa a cor individual salva ou a cor padrão
+                    newShape.style.backgroundColor = numberData.color || shapeColorInput.value;
                     newShape.style.borderColor = textColorInput.value;
                     newShape.style.width = `${parseInt(balloonWidthInput.value)}px`;
                     newShape.style.left = `${numberData.displayX}px`;
                     newShape.style.top = `${numberData.displayY}px`;
-                    newShape.dataset.number = numberData.number; // Armazena o número no dataset
+                    newShape.dataset.number = numberData.number;
+
+                    // Input de cor individual
+                    const colorInput = document.createElement('input');
+                    colorInput.type = 'color';
+                    colorInput.value = numberData.color || shapeColorInput.value;
+                    colorInput.style.marginBottom = '4px';
+                    colorInput.addEventListener('input', (e) => {
+                        numberData.color = e.target.value;
+                        newShape.style.backgroundColor = e.target.value;
+                        textarea.style.backgroundColor = e.target.value;
+                    });
 
                     const textarea = document.createElement('textarea');
                     textarea.placeholder = 'Descrição';
-                    textarea.value = `${numberData.description}`; // Mantém descrição existente
+                    textarea.value = (numberData.description && numberData.description.trim() !== '' ? numberData.description : `${numberData.number}- `);
                     textarea.style.color = textColorInput.value;
                     textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                    textarea.style.backgroundColor = shapeColorInput.value;
+                    textarea.style.backgroundColor = numberData.color || shapeColorInput.value;
                     textarea.addEventListener('input', (e) => {
                         const number = parseInt(newShape.dataset.number);
                         const numberData = numbers.find(n => n.number === number);
                         if (numberData) numberData.description = e.target.value;
-                        updateShapes(); // Recalcula altura ao digitar
+                        updateShapes();
                     });
 
+                    newShape.appendChild(colorInput);
                     newShape.appendChild(textarea);
                 } else {
                     newShape.style.width = `${parseInt(circleSizeInput.value)}px`;
