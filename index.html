@@ -313,6 +313,28 @@
             }
         });
 
+        // Permitir colar imagem da área de transferência (Ctrl+V)
+        document.addEventListener('paste', (event) => {
+            const items = (event.clipboardData || window.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        image.src = e.target.result;
+                        image.style.display = 'block';
+                        image.onload = () => {
+                            imageContainer.style.width = `${image.width}px`;
+                            imageContainer.style.height = `${image.height}px`;
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                    event.preventDefault();
+                    break;
+                }
+            }
+        });
+
         // Atualizar formas (círculos ou balões)
         function updateShapes() {
             const circles = document.querySelectorAll('.number-circle');
