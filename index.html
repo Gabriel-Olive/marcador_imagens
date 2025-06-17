@@ -102,7 +102,14 @@
         <input type="number" id="balloon-width" min="100" max="300" value="200">
         <input type="number" id="text-size" min="8" max="30" value="16">
         <button id="mode-toggle" class="action-button">Alternar para Círculos</button>
-        <input type="file" id="image-input" accept="image/*">
+        <label class="action-button" for="image-input" style="display:inline-block; cursor:pointer;">
+            Escolher Imagem
+            <input type="file" id="image-input" accept="image/*" style="display:none;">
+        </label>
+        <label class="action-button" for="camera-input" style="display:inline-block; cursor:pointer;">
+            Tirar Foto
+            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
+        </label>
         <button id="clear-button" class="action-button">Limpar Números</button>
         <button id="save-button" class="action-button">Salvar Imagem</button>
         <button id="paste-button" class="action-button">Colar Imagem</button>
@@ -123,6 +130,7 @@ const clearButton = document.getElementById('clear-button');
 const saveButton = document.getElementById('save-button');
 const pasteButton = document.getElementById('paste-button');
 const copyImageButton = document.getElementById('copy-image-button');
+const cameraInput = document.getElementById('camera-input');
 
 let isBalloonMode = true;
 let numberCounter = 1;
@@ -134,6 +142,25 @@ let dragOffset = {x: 0, y: 0};
 
 // Carregar imagem de fundo
 imageInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new window.Image();
+            img.onload = function() {
+                svg.setAttribute('width', img.naturalWidth);
+                svg.setAttribute('height', img.naturalHeight);
+                backgroundImage = e.target.result;
+                renderSVG();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Carregar imagem da câmera
+cameraInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
