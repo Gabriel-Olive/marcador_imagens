@@ -2,607 +2,480 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Números na Imagem com Balões ou Círculos</title>
+    <title>Pointly - Marque pontos e balões em imagens</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f0f2f5;
+            background: linear-gradient(120deg, #f5f7fa 0%, #c3cfe2 100%);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             min-height: 100vh;
         }
         .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            max-width: 900px;
-            width: 100%;
-            text-align: center;
-            position: relative;
-            z-index: 1;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 6px 32px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.03);
+            padding: 32px 28px 24px 28px;
+            max-width: 950px;
+            margin: 40px auto;
         }
         h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        #image-input {
-            margin-bottom: 20px;
-            padding: 10px;
-            font-size: 16px;
-            border: 2px solid #007bff;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        #image-input::file-selector-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #image-input::file-selector-button:hover {
-            background-color: #0056b3;
+            font-size: 2.1rem;
+            font-weight: 600;
+            color: #2d3a4a;
+            margin-bottom: 18px;
+            letter-spacing: 0.5px;
         }
         #controls {
+            margin-bottom: 18px;
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .control-group {
-            display: flex;
-            flex-direction: column;
+            gap: 10px;
             align-items: center;
-            gap: 5px;
         }
-        .control-group label {
-            font-size: 14px;
-            color: #333;
-        }
-        .control-group input {
-            padding: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-        #mode-toggle {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: 2px solid #007bff;
-            border-radius: 8px;
-            background: none;
+        #controls input[type="color"] {
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
+            margin-right: 4px;
         }
-        #mode-toggle:hover {
-            background-color: #007bff;
-            color: white;
+        #controls input[type="number"] {
+            width: 60px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            background: #f8fafc;
+            font-size: 1rem;
+            margin-right: 4px;
         }
-        #image-container {
-            position: relative;
-            display: inline-block;
-            max-width: 100%;
-            border: 2px solid #e0e0e0;
+        .action-button {
+            padding: 10px 22px;
             border-radius: 8px;
-            overflow: visible;
+            border: none;
+            background: #2d3a4a;
+            color: #fff;
+            font-weight: 500;
+            font-size: 1rem;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        #my-image {
+        .action-button:hover, .action-button:focus {
+            background: #46607a;
+        }
+        #svg-canvas {
             max-width: 100%;
             height: auto;
             display: block;
-            position: relative;
-            z-index: 0;
-        }
-        #arrow-canvas {
-            display: none; /* Removido uso de canvas para setas */
-        }
-        .number-circle {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            user-select: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
-            z-index: 2;
-        }
-        .number-circle:hover {
-            transform: scale(1.1);
-        }
-        .balloon {
-            position: absolute;
-            border: 2px solid #333;
-            border-radius: 8px;
-            padding: 5px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-            z-index: 2;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            cursor: move;
-            min-height: 30px; /* Altura mínima para uma linha */
-        }
-        .balloon textarea {
-            border: none;
-            font-size: 14px;
-            width: 100%;
-            outline: none;
-            cursor: text;
-            background-color: inherit;
-            resize: none; /* Impede redimensionamento manual */
-            overflow: hidden; /* Controla altura via JavaScript */
-            padding: 2px 0; /* Pequeno padding para visibilidade */
-        }
-        #button-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .action-button {
-            padding: 12px 24px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-        .action-button:hover {
-            transform: translateY(-2px);
-        }
-        #clear-button {
-            background-color: #6c757d;
-            color: white;
-        }
-        #clear-button:hover {
-            background-color: #5a6268;
-        }
-        #save-button {
-            background-color: #28a745;
-            color: white;
-        }
-        #save-button:hover {
-            background-color: #218838;
-        }
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-            h1 {
-                font-size: 20px;
-            }
-            .action-button {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-            #controls {
-                gap: 10px;
-                padding: 10px;
-            }
-            .control-group label {
-                font-size: 12px;
-            }
-            .control-group input {
-                font-size: 12px;
-                padding: 4px;
-            }
-            .balloon textarea {
-                font-size: 12px;
-                width: 80px;
-            }
+            margin: 0 auto;
         }
         .selected-shape {
-            outline: 3px solid #007bff;
-            z-index: 10;
+            stroke: #007bff;
+            stroke-width: 3;
+        }
+        @media (max-width: 700px) {
+            .container {
+                padding: 12px 4vw;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            #controls {
+                flex-direction: column;
+                gap: 7px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Adicionar Números à Imagem com Balões ou Círculos</h1>
-        <div id="controls">
-            <div class="control-group">
-                <label for="shape-color">Cor do Círculo/Balão</label>
-                <input type="color" id="shape-color" value="#ff4d4f">
-            </div>
-            <div class="control-group">
-                <label for="text-color">Cor do Texto</label>
-                <input type="color" id="text-color" value="#ffffff">
-            </div>
-            <div class="control-group">
-                <label for="circle-size">Tamanho do Círculo (px)</label>
-                <input type="number" id="circle-size" min="10" max="50" value="28">
-            </div>
-            <div class="control-group">
-                <label for="balloon-width">Largura do Balão (px)</label>
-                <input type="number" id="balloon-width" min="100" max="300" value="200">
-            </div>
-            <div class="control-group">
-                <label for="text-size">Tamanho do Texto (px)</label>
-                <input type="number" id="text-size" min="8" max="30" value="16">
-            </div>
-        </div>
-        <button id="mode-toggle">Alternar para Círculos</button>
+<div class="container">
+    <h1>Pointly</h1>
+    <p style="color:#46607a; margin-top:-10px; margin-bottom:20px; font-size:1.1rem;">
+        Marque, numere e destaque pontos em imagens de forma simples e elegante.
+    </p>
+    <div id="controls">
+        <input type="color" id="shape-color" value="#ff4d4f">
+        <input type="color" id="text-color" value="#ffffff">
+        <input type="number" id="circle-size" min="10" max="50" value="28">
+        <input type="number" id="balloon-width" min="100" max="300" value="200">
+        <input type="number" id="text-size" min="8" max="30" value="16">
+        <button id="mode-toggle" class="action-button">Alternar para Círculos</button>
         <input type="file" id="image-input" accept="image/*">
-        <button id="camera-button" class="action-button" type="button">Tirar Foto</button>
-        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
-        <div id="image-container">
-            <img id="my-image" src="" alt="Imagem carregada">
-            <canvas id="arrow-canvas"></canvas>
-        </div>
-        <div id="button-container">
-            <button id="clear-button" class="action-button">Limpar Números</button>
-            <button id="save-button" class="action-button">Salvar Imagem</button>
-            <button id="copy-button" class="action-button">Copiar Imagem</button>
-        </div>
+        <button id="clear-button" class="action-button">Limpar Números</button>
+        <button id="save-button" class="action-button">Salvar Imagem</button>
+        <button id="paste-button" class="action-button">Colar Imagem</button>
+        <button id="copy-image-button" class="action-button">Copiar Imagem</button>
     </div>
+    <svg id="svg-canvas" width="800" height="600"></svg>
+</div>
+<script>
+const svg = document.getElementById('svg-canvas');
+const imageInput = document.getElementById('image-input');
+const shapeColorInput = document.getElementById('shape-color');
+const textColorInput = document.getElementById('text-color');
+const circleSizeInput = document.getElementById('circle-size');
+const balloonWidthInput = document.getElementById('balloon-width');
+const textSizeInput = document.getElementById('text-size');
+const modeToggle = document.getElementById('mode-toggle');
+const clearButton = document.getElementById('clear-button');
+const saveButton = document.getElementById('save-button');
+const pasteButton = document.getElementById('paste-button');
+const copyImageButton = document.getElementById('copy-image-button');
 
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <script>
-        const imageInput = document.getElementById('image-input');
-        const image = document.getElementById('my-image');
-        const imageContainer = document.getElementById('image-container');
-        const clearButton = document.getElementById('clear-button');
-        const saveButton = document.getElementById('save-button');
-        const copyButton = document.getElementById('copy-button');
-        const shapeColorInput = document.getElementById('shape-color');
-        const textColorInput = document.getElementById('text-color');
-        const circleSizeInput = document.getElementById('circle-size');
-        const balloonWidthInput = document.getElementById('balloon-width');
-        const textSizeInput = document.getElementById('text-size');
-        const modeToggle = document.getElementById('mode-toggle');
-        const cameraButton = document.getElementById('camera-button');
-        const cameraInput = document.getElementById('camera-input');
-        let numberCounter = 1;
-        let numbers = [];
-        let isBalloonMode = true;
-        let currentShape = null;
-        let isDraggingShape = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let selectedShape = null; // Novo: guarda o elemento selecionado
+let isBalloonMode = true;
+let numberCounter = 1;
+let numbers = [];
+let backgroundImage = null;
+let selectedShape = null;
+let dragIdx = null;
+let dragOffset = {x: 0, y: 0};
 
-        // Atualizar tamanho do container quando a imagem carrega
-        imageInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    image.src = e.target.result;
-                    image.style.display = 'block';
-                    image.onload = () => {
-                        imageContainer.style.width = `${image.width}px`;
-                        imageContainer.style.height = `${image.height}px`;
-                    };
+// Carregar imagem de fundo
+imageInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new window.Image();
+            img.onload = function() {
+                svg.setAttribute('width', img.naturalWidth);
+                svg.setAttribute('height', img.naturalHeight);
+                backgroundImage = e.target.result;
+                renderSVG();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Alternar modo
+modeToggle.addEventListener('click', () => {
+    isBalloonMode = !isBalloonMode;
+    modeToggle.textContent = isBalloonMode ? 'Alternar para Círculos' : 'Alternar para Balões';
+    renderSVG();
+});
+
+// Limpar
+clearButton.addEventListener('click', () => {
+    numbers = [];
+    numberCounter = 1;
+    renderSVG();
+});
+
+// Adicionar marcador ao clicar no SVG
+svg.addEventListener('click', (event) => {
+    // Se clicou em um shape existente (retângulo OU texto do balão)
+    if (
+        (event.target.dataset && event.target.dataset.idx) ||
+        (event.target.previousSibling && event.target.previousSibling.dataset && event.target.previousSibling.dataset.idx)
+    ) {
+        // Descobre o índice correto
+        let idx = event.target.dataset && event.target.dataset.idx
+            ? event.target.dataset.idx
+            : event.target.previousSibling.dataset.idx;
+        selectShape(idx);
+
+        // Permite editar o texto do balão ao clicar (não só no duplo clique)
+        if (isBalloonMode) {
+            const novoTexto = prompt('Editar texto do balão:', numbers[idx].description);
+            if (novoTexto !== null) {
+                numbers[idx].description = novoTexto;
+                renderSVG();
+            }
+        }
+        return;
+    }
+
+    // Se não clicou em shape, cria novo marcador
+    const rect = svg.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    numbers.push({
+        number: numberCounter,
+        x, y,
+        description: `${numberCounter}- `,
+        color: shapeColorInput.value
+    });
+    if (isBalloonMode) {
+        const novoTexto = prompt('Digite o texto do balão:', `${numberCounter}- `);
+        if (novoTexto !== null) {
+            numbers[numbers.length - 1].description = novoTexto;
+        }
+    }
+    numberCounter++;
+    renderSVG();
+});
+
+// Selecionar shape
+function selectShape(idx) {
+    selectedShape = parseInt(idx);
+    renderSVG();
+}
+
+// Editar cor do shape selecionado
+shapeColorInput.addEventListener('input', () => {
+    if (selectedShape !== null) {
+        numbers[selectedShape].color = shapeColorInput.value;
+        renderSVG();
+    }
+});
+
+// Editar texto do balão selecionado
+svg.addEventListener('dblclick', (event) => {
+    if (isBalloonMode && event.target.classList.contains('balloon-rect')) {
+        const idx = parseInt(event.target.dataset.idx);
+        const novoTexto = prompt('Editar texto do balão:', numbers[idx].description);
+        if (novoTexto !== null) {
+            numbers[idx].description = novoTexto;
+            renderSVG();
+        }
+    }
+});
+
+// Início do arrasto
+svg.addEventListener('mousedown', (event) => {
+    // Só inicia arrasto se clicar em shape existente
+    if (
+        (event.target.dataset && event.target.dataset.idx) ||
+        (event.target.previousSibling && event.target.previousSibling.dataset && event.target.previousSibling.dataset.idx)
+    ) {
+        let idx = event.target.dataset && event.target.dataset.idx
+            ? event.target.dataset.idx
+            : event.target.previousSibling.dataset.idx;
+        dragIdx = parseInt(idx);
+        const n = numbers[dragIdx];
+        const rect = svg.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        dragOffset.x = mouseX - n.x;
+        dragOffset.y = mouseY - n.y;
+        event.preventDefault();
+    }
+});
+
+// Arrastando
+svg.addEventListener('mousemove', (event) => {
+    if (dragIdx !== null) {
+        const rect = svg.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        numbers[dragIdx].x = mouseX - dragOffset.x;
+        numbers[dragIdx].y = mouseY - dragOffset.y;
+        renderSVG();
+    }
+});
+
+// Fim do arrasto
+svg.addEventListener('mouseup', () => {
+    dragIdx = null;
+});
+
+// Para dispositivos touch (opcional)
+svg.addEventListener('touchstart', (event) => {
+    const touch = event.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (
+        (target.dataset && target.dataset.idx) ||
+        (target.previousSibling && target.previousSibling.dataset && target.previousSibling.dataset.idx)
+    ) {
+        let idx = target.dataset && target.dataset.idx
+            ? target.dataset.idx
+            : target.previousSibling.dataset.idx;
+        dragIdx = parseInt(idx);
+        const n = numbers[dragIdx];
+        const rect = svg.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        dragOffset.x = touchX - n.x;
+        dragOffset.y = touchY - n.y;
+        event.preventDefault();
+    }
+}, {passive: false});
+
+svg.addEventListener('touchmove', (event) => {
+    if (dragIdx !== null) {
+        const touch = event.touches[0];
+        const rect = svg.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        numbers[dragIdx].x = touchX - dragOffset.x;
+        numbers[dragIdx].y = touchY - dragOffset.y;
+        renderSVG();
+        event.preventDefault();
+    }
+}, {passive: false});
+
+svg.addEventListener('touchend', () => {
+    dragIdx = null;
+});
+
+// Renderizar tudo
+function renderSVG() {
+    svg.innerHTML = '';
+    // Fundo
+    if (backgroundImage) {
+        let img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', backgroundImage);
+        img.setAttribute('x', 0);
+        img.setAttribute('y', 0);
+        img.setAttribute('width', svg.width.baseVal.value);
+        img.setAttribute('height', svg.height.baseVal.value);
+        svg.appendChild(img);
+    }
+    // Shapes
+    numbers.forEach((n, idx) => {
+        if (isBalloonMode) {
+            // Medir o texto
+            let tempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            tempText.setAttribute('x', n.x + 10);
+            tempText.setAttribute('y', n.y + 24);
+            tempText.setAttribute('font-size', textSizeInput.value);
+            tempText.setAttribute('font-family', 'Segoe UI, Arial');
+            tempText.textContent = n.description;
+            svg.appendChild(tempText);
+            const bbox = tempText.getBBox();
+            svg.removeChild(tempText);
+
+            // Ajustar largura e altura do balão conforme texto
+            const paddingX = 20;
+            const paddingY = 16;
+            const rectWidth = bbox.width + paddingX;
+            const rectHeight = bbox.height + paddingY;
+
+            let rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', n.x);
+            rect.setAttribute('y', n.y);
+            rect.setAttribute('rx', 8);
+            rect.setAttribute('ry', 8);
+            rect.setAttribute('width', rectWidth);
+            rect.setAttribute('height', rectHeight);
+            rect.setAttribute('fill', n.color);
+            rect.setAttribute('stroke', textColorInput.value);
+            rect.setAttribute('stroke-width', 2);
+            rect.classList.add('balloon-rect');
+            rect.dataset.idx = idx;
+            if (selectedShape === idx) rect.classList.add('selected-shape');
+            svg.appendChild(rect);
+
+            let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', n.x + paddingX / 2);
+            text.setAttribute('y', n.y + rectHeight / 2 + bbox.height / 4);
+            text.setAttribute('fill', textColorInput.value);
+            text.setAttribute('font-size', textSizeInput.value);
+            text.setAttribute('font-family', 'Segoe UI, Arial');
+            text.textContent = n.description;
+            svg.appendChild(text);
+        } else {
+            // Círculo + número
+            let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', n.x);
+            circle.setAttribute('cy', n.y);
+            circle.setAttribute('r', circleSizeInput.value / 2);
+            circle.setAttribute('fill', n.color);
+            circle.setAttribute('stroke', textColorInput.value);
+            circle.setAttribute('stroke-width', 2);
+            circle.dataset.idx = idx;
+            if (selectedShape === idx) circle.classList.add('selected-shape');
+            svg.appendChild(circle);
+
+            let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', n.x);
+            text.setAttribute('y', n.y + 6);
+            text.setAttribute('fill', textColorInput.value);
+            text.setAttribute('font-size', textSizeInput.value);
+            text.setAttribute('font-family', 'Segoe UI, Arial');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = n.number;
+            svg.appendChild(text);
+        }
+    });
+}
+
+// Salvar SVG como PNG
+saveButton.addEventListener('click', () => {
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svg);
+    const svgBlob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new window.Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = svg.width.baseVal.value;
+        canvas.height = svg.height.baseVal.value;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const a = document.createElement('a');
+        a.download = 'imagem-com-elementos.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+    img.src = url;
+});
+
+// Permitir colar imagem com Ctrl+V
+document.addEventListener('paste', (event) => {
+    const items = (event.clipboardData || window.clipboardData).items;
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            const file = items[i].getAsFile();
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new window.Image();
+                img.onload = function() {
+                    svg.setAttribute('width', img.naturalWidth);
+                    svg.setAttribute('height', img.naturalHeight);
+                    backgroundImage = e.target.result;
+                    renderSVG();
                 };
-                reader.readAsDataURL(file);
-            }
-        });
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.preventDefault();
+            break;
+        }
+    }
+});
 
-        cameraButton.addEventListener('click', () => {
-            cameraInput.click();
-        });
+// Botão "Colar Imagem"
+pasteButton.addEventListener('click', () => {
+    alert('Use Ctrl+V para colar uma imagem copiada da área de transferência.');
+});
 
-        cameraInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    image.src = e.target.result;
-                    image.style.display = 'block';
-                    image.onload = () => {
-                        imageContainer.style.width = `${image.width}px`;
-                        imageContainer.style.height = `${image.height}px`;
-                    };
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+// Copiar imagem para a área de transferência
+copyImageButton.addEventListener('click', () => {
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svg);
+    const svgBlob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(svgBlob);
 
-        // Permitir colar imagem da área de transferência (Ctrl+V)
-        document.addEventListener('paste', (event) => {
-            const items = (event.clipboardData || window.clipboardData).items;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf('image') !== -1) {
-                    const file = items[i].getAsFile();
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        image.src = e.target.result;
-                        image.style.display = 'block';
-                        image.onload = () => {
-                            imageContainer.style.width = `${image.width}px`;
-                            imageContainer.style.height = `${image.height}px`;
-                        };
-                    };
-                    reader.readAsDataURL(file);
-                    event.preventDefault();
-                    break;
-                }
-            }
-        });
-
-        // Atualizar formas (círculos ou balões)
-        function updateShapes() {
-            const circles = document.querySelectorAll('.number-circle');
-            const balloons = document.querySelectorAll('.balloon');
-            if (isBalloonMode) {
-                balloons.forEach(balloon => {
-                    const number = parseInt(balloon.dataset.number);
-                    const numberData = numbers.find(n => n.number === number);
-                    if (numberData) {
-                        balloon.style.backgroundColor = numberData.color || shapeColorInput.value;
-                        balloon.style.borderColor = textColorInput.value;
-                        balloon.style.width = `${parseInt(balloonWidthInput.value)}px`;
-                        const textarea = balloon.querySelector('textarea');
-                        textarea.style.color = textColorInput.value;
-                        textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                        textarea.style.backgroundColor = numberData.color || shapeColorInput.value;
-                        balloon.style.left = `${numberData.displayX}px`;
-                        balloon.style.top = `${numberData.displayY}px`;
-                        textarea.style.height = 'auto';
-                        textarea.style.height = `${textarea.scrollHeight}px`;
-                        balloon.style.height = `${textarea.scrollHeight + 10}px`;
-                    }
-                });
+    const img = new window.Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = svg.width.baseVal.value;
+        canvas.height = svg.height.baseVal.value;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(blob => {
+            if (navigator.clipboard && window.ClipboardItem) {
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                    .then(() => alert('Imagem copiada para a área de transferência!'))
+                    .catch(() => alert('Não foi possível copiar a imagem.'));
             } else {
-                circles.forEach(circle => {
-                    const number = parseInt(circle.textContent);
-                    const numberData = numbers.find(n => n.number === number);
-                    if (numberData) {
-                        circle.style.width = `${parseInt(circleSizeInput.value)}px`;
-                        circle.style.height = `${parseInt(circleSizeInput.value)}px`;
-                        circle.style.backgroundColor = shapeColorInput.value;
-                        circle.style.color = textColorInput.value;
-                        circle.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                        circle.style.left = `${numberData.displayX - parseInt(circleSizeInput.value) / 2}px`;
-                        circle.style.top = `${numberData.displayY - parseInt(circleSizeInput.value) / 2}px`;
-                        circle.style.borderRadius = '50%';
-                    }
-                });
+                alert('Seu navegador não suporta copiar imagens para a área de transferência.');
             }
-        }
+        }, 'image/png');
+        URL.revokeObjectURL(url);
+    };
+    img.src = url;
+});
 
-        // Adicionar forma e gerenciar cliques
-        imageContainer.addEventListener('click', (event) => {
-            const rect = imageContainer.getBoundingClientRect();
-            const scaleX = image.naturalWidth / rect.width;
-            const scaleY = image.naturalHeight / rect.height;
-            const x = (event.clientX - rect.left) * scaleX;
-            const y = (event.clientY - rect.top) * scaleY;
-            const displayX = event.clientX - rect.left;
-            const displayY = event.clientY - rect.top;
-
-            let clickedOnShape = false;
-
-            if (isBalloonMode) {
-                const balloons = document.querySelectorAll('.balloon');
-                balloons.forEach(balloon => {
-                    if (isClickInsideShape(event, balloon)) {
-                        selectedShape = balloon;
-                        clickedOnShape = true;
-                        balloon.querySelector('textarea').focus();
-                    } else {
-                        balloon.classList.remove('selected-shape');
-                    }
-                });
-            } else {
-                const circles = document.querySelectorAll('.number-circle');
-                circles.forEach(circle => {
-                    if (isClickInsideShape(event, circle)) {
-                        selectedShape = circle;
-                        clickedOnShape = true;
-                    } else {
-                        circle.classList.remove('selected-shape');
-                    }
-                });
-            }
-
-            // Só cria novo se não clicou em shape existente
-            if (!clickedOnShape) {
-                const shape = document.createElement('div');
-                shape.className = isBalloonMode ? 'balloon' : 'number-circle';
-                if (isBalloonMode) {
-                    shape.style.backgroundColor = shapeColorInput.value;
-                    shape.style.borderColor = textColorInput.value;
-                    shape.style.width = `${parseInt(balloonWidthInput.value)}px`;
-                    shape.style.left = `${displayX}px`;
-                    shape.style.top = `${displayY}px`;
-                    shape.dataset.number = numberCounter;
-
-                    const textarea = document.createElement('textarea');
-                    textarea.placeholder = 'Descrição';
-                    textarea.value = `${numberCounter}- `;
-                    textarea.style.color = textColorInput.value;
-                    textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                    textarea.style.backgroundColor = shapeColorInput.value;
-                    textarea.addEventListener('input', (e) => {
-                        const number = parseInt(shape.dataset.number);
-                        const numberData = numbers.find(n => n.number === number);
-                        if (numberData) numberData.description = e.target.value;
-                        updateShapes();
-                    });
-
-                    shape.appendChild(textarea);
-                } else {
-                    shape.style.width = `${parseInt(circleSizeInput.value)}px`;
-                    shape.style.height = `${parseInt(circleSizeInput.value)}px`;
-                    shape.style.backgroundColor = shapeColorInput.value;
-                    shape.style.color = textColorInput.value;
-                    shape.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                    shape.style.left = `${displayX - parseInt(circleSizeInput.value) / 2}px`;
-                    shape.style.top = `${displayY - parseInt(circleSizeInput.value) / 2}px`;
-                    shape.style.borderRadius = '50%';
-                    shape.textContent = numberCounter;
-                }
-                imageContainer.appendChild(shape);
-                numbers.push({
-                    number: numberCounter,
-                    x, y, displayX, displayY,
-                    description: `${numberCounter}- `,
-                    color: shapeColorInput.value
-                });
-                numberCounter++;
-                if (isBalloonMode) updateShapes();
-            }
-        });
-
-        // Verificar se o clique está dentro da forma
-        function isClickInsideShape(event, shape) {
-            const rect = shape.getBoundingClientRect();
-            return event.clientX >= rect.left && event.clientX <= rect.right &&
-                   event.clientY >= rect.top && event.clientY <= rect.bottom;
-        }
-
-        // Eventos de arrastar formas
-        imageContainer.addEventListener('mousedown', (event) => {
-            const rect = imageContainer.getBoundingClientRect();
-            const shapes = isBalloonMode ? document.querySelectorAll('.balloon') : document.querySelectorAll('.number-circle');
-            let clickedShape = null;
-
-            shapes.forEach(shape => {
-                if (isClickInsideShape(event, shape)) {
-                    clickedShape = shape;
-                    currentShape = numbers.find(n => parseInt(isBalloonMode ? shape.dataset.number : shape.textContent) === n.number);
-                    isDraggingShape = true;
-                    dragStartX = event.clientX - rect.left - currentShape.displayX;
-                    dragStartY = event.clientY - rect.top - currentShape.displayY;
-                }
-            });
-        });
-
-        imageContainer.addEventListener('mousemove', (event) => {
-            if (isDraggingShape && currentShape) {
-                const rect = imageContainer.getBoundingClientRect();
-                currentShape.displayX = event.clientX - rect.left - dragStartX;
-                currentShape.displayY = event.clientY - rect.top - dragStartY;
-                updateShapes();
-            }
-        });
-
-        imageContainer.addEventListener('mouseup', () => {
-            isDraggingShape = false;
-            currentShape = null;
-        });
-        imageContainer.addEventListener('mouseleave', () => {
-            isDraggingShape = false;
-            currentShape = null;
-        });
-
-        // Limpar formas
-        function clearShapes() {
-            const circles = document.querySelectorAll('.number-circle');
-            const balloons = document.querySelectorAll('.balloon');
-            circles.forEach(circle => circle.remove());
-            balloons.forEach(balloon => balloon.remove());
-        }
-
-        // Limpar formas
-        clearButton.addEventListener('click', () => {
-            clearShapes();
-            numbers = [];
-            numberCounter = 1;
-        });
-
-        // Salvar imagem com formas
-        saveButton.addEventListener('click', () => {
-            html2canvas(imageContainer, {
-                backgroundColor: null // Mantém transparência se houver
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'imagem-com-elementos.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
-        });
-
-        // Copiar imagem para área de transferência
-        copyButton.addEventListener('click', () => {
-            html2canvas(imageContainer, {
-                backgroundColor: null
-            }).then(canvas => {
-                canvas.toBlob(blob => {
-                    if (navigator.clipboard && window.ClipboardItem) {
-                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-                            .then(() => alert('Imagem copiada para a área de transferência!'))
-                            .catch(() => alert('Não foi possível copiar a imagem.'));
-                    } else {
-                        alert('Seu navegador não suporta copiar imagens para a área de transferência.');
-                    }
-                });
-            });
-        });
-
-        // Alternar entre modos de balão e círculo
-        modeToggle.addEventListener('click', () => {
-            isBalloonMode = !isBalloonMode;
-            modeToggle.textContent = isBalloonMode ? 'Alternar para Círculos' : 'Alternar para Balões';
-            clearShapes(); // Limpa todos os elementos antes de alternar
-            numbers.forEach(numberData => {
-                const newShape = document.createElement('div');
-                newShape.className = isBalloonMode ? 'balloon' : 'number-circle';
-                if (isBalloonMode) {
-                    // Usa a cor individual salva ou a cor padrão
-                    newShape.style.backgroundColor = numberData.color || shapeColorInput.value;
-                    newShape.style.borderColor = textColorInput.value;
-                    newShape.style.width = `${parseInt(balloonWidthInput.value)}px`;
-                    newShape.style.left = `${numberData.displayX}px`;
-                    newShape.style.top = `${numberData.displayY}px`;
-                    newShape.dataset.number = numberData.number;
-
-                    const textarea = document.createElement('textarea');
-                    textarea.placeholder = 'Descrição';
-                    textarea.value = (numberData.description && numberData.description.trim() !== '' ? numberData.description : `${numberData.number}- `);
-                    textarea.style.color = textColorInput.value;
-                    textarea.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                    textarea.style.backgroundColor = numberData.color || shapeColorInput.value;
-                    textarea.addEventListener('input', (e) => {
-                        const number = parseInt(newShape.dataset.number);
-                        const numberData = numbers.find(n => n.number === number);
-                        if (numberData) numberData.description = e.target.value;
-                        updateShapes();
-                    });
-
-                    newShape.appendChild(textarea);
-                } else {
-                    newShape.style.width = `${parseInt(circleSizeInput.value)}px`;
-                    newShape.style.height = `${parseInt(circleSizeInput.value)}px`;
-                    newShape.style.backgroundColor = shapeColorInput.value;
-                    newShape.style.color = textColorInput.value;
-                    newShape.style.fontSize = `${parseInt(textSizeInput.value)}px`;
-                    newShape.style.left = `${numberData.displayX - parseInt(circleSizeInput.value) / 2}px`;
-                    newShape.style.top = `${numberData.displayY - parseInt(circleSizeInput.value) / 2}px`;
-                    newShape.style.borderRadius = '50%';
-                    newShape.textContent = numberData.number;
-                }
-                imageContainer.appendChild(newShape);
-            });
-            updateShapes();
-        });
-
-        shapeColorInput.addEventListener('input', (e) => {
-            if (selectedShape) {
-                const number = isBalloonMode
-                    ? parseInt(selectedShape.dataset.number)
-                    : parseInt(selectedShape.textContent);
-                const numberData = numbers.find(n => n.number === number);
-                if (numberData) numberData.color = e.target.value;
-                updateShapes();
-            }
-        });
-    </script>
+// Inicializa SVG vazio
+renderSVG();
+</script>
 </body>
 </html>
